@@ -5,33 +5,35 @@ import org.springframework.stereotype.Service;
 
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
 public class HelloService {
-    HelloRepo helloRepo;
+    private HelloRepo helloRepo;
+    private final Random random = new Random();
 
 
-
-    public String getGreeting(String language){
-        List<Map<String, String>> greetings = helloRepo.greetings;
-        if(language.equals("random")){
-            int index = new Random().nextInt(greetings.size());
-            Map<String, String> stringStringMap = greetings.get(index);
-            return stringStringMap.get("greeting");
+    public String getGreeting(String language) {
+        List<Message> greetings = helloRepo.getGreetings();
+        if (language.equals("random")) {
+            int index = random.nextInt(greetings.size());
+            Message message = greetings.get(index);
+            return message.getGreeting();
         }
 
-            Optional<Map<String, String>> languagee  = greetings.stream()
-                    .filter(lang -> lang.get("language").equals(language)).findFirst();
-        if(languagee.isPresent())
-            return languagee.get().get("greeting");
-        else {
-            throw new NotFoundException("WRONG ADDRESS");
-        }
+        Optional<Message> languagee = greetings.stream()
+                .filter(lang -> lang.getLanguage().equals(language))
+                .findFirst();
+        return languagee.map(lan -> lan.getGreeting())
+                .orElseThrow(() -> new NotFoundException("\n\nAddress /" + language + " does NOT exist \n" +
+                        "List of addresses : /"
+                        + greetings.stream()
+                        .map(message -> message.getLanguage())
+                        .collect(Collectors.toList())
+                        .toString()
+                        + " or /random"));
     }
-
 }

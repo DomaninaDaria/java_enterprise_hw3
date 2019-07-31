@@ -1,11 +1,13 @@
 package java_dz_3;
 
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -13,28 +15,31 @@ import java.util.stream.Collectors;
 @SpringBootTest
 public class JavaDz3ApplicationTests {
 
-	@Autowired
-	private HelloService helloService;
+    @Autowired
+    HelloService helloService;
 
 
-	@Test
-	public void checkRandom() {
-		final int valueOfObj = 15;
-		ArrayList<String> greetings = new ArrayList<>();
-		for(int i = 0; i< valueOfObj; i++){
-		String	random =  helloService.getGreeting("random");
-			greetings.add(random);
-		}
+    @Test
+    public void checkRandom() {
+        final int valueOfObj = 200;
+        ArrayList<String> greetings = new ArrayList<String>(Collections.nCopies(valueOfObj, ""));
+        ListIterator<String> listIterator = greetings.listIterator();
 
-		Map<String, Long> collect = greetings.stream().collect(Collectors.groupingBy(s -> s ,
-				Collectors.counting()));
-		System.out.println(collect.toString());
-		List<Long> collect1 = new ArrayList<>(collect.values());
-		for(int i = 0; i< collect.size()-1; i++){
-			assert (Math.abs(collect1.get(i) - collect1.get(i+1)) <= valueOfObj/collect.size( ) );
+        while (listIterator.hasNext()) {
+            listIterator.next();
+            listIterator.set(helloService.getGreeting("random"));
+        }
 
-		}
 
-	}
+        List<Long> quantityOfEveryGreeting = new ArrayList<Long>(greetings.stream()
+                .collect(Collectors.groupingBy(s -> s, Collectors.counting()))
+                .values());
 
+        System.out.println(quantityOfEveryGreeting.toString());
+
+        boolean result = quantityOfEveryGreeting.stream()
+                .allMatch(i -> i < valueOfObj / quantityOfEveryGreeting.size() * 2 &&
+                        i > valueOfObj / quantityOfEveryGreeting.size() / 3);
+        Assert.assertTrue(result);
+    }
 }
